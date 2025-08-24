@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Engineering Economics Calculator</title>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --panel: #12141a;
+      --accent: #4f46e5;
+      --accent-2: #22d3ee;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --success: #16a34a;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --card: #0f1117;
+      --border: #1f2937;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(79,70,229,.2), transparent 60%),
+                  radial-gradient(1000px 500px at 110% 10%, rgba(34,211,238,.15), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 28px 18px 80px;
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 30px rgba(79,70,229,.35), 0 2px 8px rgba(34,211,238,.25);
+    }
+    h1 { font-size: 1.35rem; margin: 0; letter-spacing: .2px; }
+    .muted { color: var(--muted); font-size: .95rem; }
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .grid { display: grid; gap: 14px; }
+    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 860px) { .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; } }
+
+    label { display: block; font-size: .9rem; color: var(--muted); margin-bottom: 6px; }
+    input[type="number"], input[type="text"], input[type="range"] {
+      width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    input[type="number"]:focus, input[type="text"]:focus, input[type="range"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.25); }
+    input[type="range"] { padding: 0; height: 36px; }
+
+    .btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white; padding: 12px 16px; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; letter-spacing: .2px;
+      box-shadow: 0 8px 24px rgba(79,70,229,.35);
+      transition: transform .05s ease, filter .2s ease;
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: translateY(1px); }
+    .btn.secondary { background: none; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 10px; border-bottom: 1px dashed var(--border); text-align: left; }
+    th { color: var(--muted); font-weight: 600; }
+
+    .results { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+    @media (max-width: 980px) { .results { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .results { grid-template-columns: 1fr; } }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+    .card h3 { margin: 0 0 8px; font-size: .95rem; color: var(--muted); font-weight: 600; }
+    .value { font-size: 1.25rem; font-weight: 800; letter-spacing: .2px; }
+
+    .svg-wrap { margin-top: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+
+    .footer { margin-top: 28px; color: var(--muted); font-size: .85rem; display:flex; justify-content: space-between; gap:8px; flex-wrap: wrap; }
+    .tag { padding: 4px 10px; background: #10131a; border: 1px solid var(--border); border-radius: 999px; font-size: .8rem; color: var(--muted); }
+
+    .fade-in { animation: fade .4s ease both; }
+    @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Engineering Economics Calculator</h1>
+          <div class="muted">NPV • IRR • Payback • Discounted Payback</div>
+        </div>
+      </div>
+      <div class="tag">made by @tzmmb</div>
+    </header>
+
+    <section class="panel grid cols-2 fade-in" aria-label="Inputs">
+      <div class="grid cols-2">
+        <div>
+          <label for="project">Project name</label>
+          <input id="project" type="text" placeholder="e.g., Solar Retrofit" />
+        </div>
+        <div>
+          <label for="initial">Initial investment (t = 0)</label>
+          <input id="initial" type="number" step="0.01" placeholder="-10000" />
+        </div>
+        <div>
+          <label for="periods">Number of periods (years)</label>
+          <input id="periods" type="number" min="1" max="50" value="5" />
+        </div>
+        <div>
+          <label for="rate">Discount rate: <span id="rateLabel">10.0%</span></label>
+          <input id="rate" type="range" min="0" max="50" value="10" step="0.1" />
+        </div>
+      </div>
+
+      <div class="panel" style="background:transparent; margin-top: 6px;">
+        <div style="display:flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px;">
+          <h2 style="margin:0; font-size:1rem;">Cash Flows (t = 1 … n)</h2>
+          <div style="display:flex; gap:8px;">
+            <button class="btn secondary" id="exampleBtn" title="Load a quick example">Example</button>
+            <button class="btn secondary" id="resetBtn">Reset</button>
+            <button class="btn" id="calcBtn">Calculate</button>
+          </div>
+        </div>
+        <div style="overflow:auto; max-height: 320px; border:1px solid var(--border); border-radius: 12px;">
+          <table aria-describedby="Cash flow table">
+            <thead>
+              <tr>
+                <th style="width:120px;">Period (t)</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="cfBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="fade-in" style="margin-top:16px;">
+      <div class="results" aria-live="polite">
+        <div class="card">
+          <h3>NPV (at chosen rate)</h3>
+          <div class="value" id="npvVal">—</div>
+        </div>
+        <div class="card">
+          <h3>IRR</h3>
+          <div class="value" id="irrVal">—</div>
+        </div>
+        <div class="card">
+          <h3>Payback Period</h3>
+          <div class="value" id="pbVal">—</div>
+        </div>
+        <div class="card">
+          <h3>Discounted Payback</h3>
+          <div class="value" id="dpbVal">—</div>
+        </div>
+      </div>
+      <div class="svg-wrap" id="chartWrap" aria-hidden="true"></div>
+    </section></div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const fmtMoney = n => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 2 }).format(n);
+    const fmtPct = n => (n*100).toFixed(2) + '%';
+
+    const els = {
+      project: $('#project'),
+      initial: $('#initial'),
+      periods: $('#periods'),
+      rate: $('#rate'),
+      rateLabel: $('#rateLabel'),
+      cfBody: $('#cfBody'),
+      npvVal: $('#npvVal'), irrVal: $('#irrVal'), pbVal: $('#pbVal'), dpbVal: $('#dpbVal'),
+      chartWrap: $('#chartWrap'),
+      calcBtn: $('#calcBtn'), resetBtn: $('#resetBtn'), exampleBtn: $('#exampleBtn')
+    };
+
+    function buildRows(n) {
+      els.cfBody.innerHTML = '';
+      for (let t = 1; t <= n; t++) {
+        const tr = document.createElement('tr');
+        const tdT = document.createElement('td');
+        const tdA = document.createElement('td');
+        tdT.textContent = `t = ${t}`;
+        const input = document.createElement('input');
+        input.type = 'number'; input.step = '0.01'; input.placeholder = '0.00'; input.dataset.t = t;
+        input.style.width = '100%'; input.style.padding = '10px 12px'; input.style.borderRadius = '10px'; input.style.border = '1px solid var(--border)'; input.style.background = 'var(--card)'; input.style.color = 'var(--text)';
+        tdA.appendChild(input);
+        tr.append(tdT, tdA);
+        els.cfBody.appendChild(tr);
+      }
+    }
+
+    function getCashFlows() {
+      const n = Math.max(1, Math.min(50, parseInt(els.periods.value || '1', 10)));
+      const cfs = new Array(n + 1).fill(0);
+      const init = parseFloat(els.initial.value);
+      cfs[0] = isFinite(init) ? init : 0;
+      $$('#cfBody input').forEach(inp => {
+        const t = parseInt(inp.dataset.t, 10);
+        const v = parseFloat(inp.value);
+        cfs[t] = isFinite(v) ? v : 0;
+      });
+      return cfs;
+    }
+
+    function npv(cfs, rate) {
+      const r = rate;
+      let s = 0;
+      for (let t = 0; t < cfs.length; t++) s += cfs[t] / Math.pow(1 + r, t);
+      return s;
+    }
+
+    function payback(cfs) {
+      let cum = 0;
+      for (let t = 0; t < cfs.length; t++) {
+        const prevCum = cum;
+        cum += cfs[t];
+        if (cum >= 0) {
+          if (t === 0) return 0; // instant
+          const needed = -prevCum;
+          const inside = cfs[t] === 0 ? 0 : needed / cfs[t];
+          return (t - 1) + inside; // linear interpolation within period
+        }
+      }
+      return null; // never recovered
+    }
+
+    function discountedPayback(cfs, rate) {
+      let cum = 0;
+      for (let t = 0; t < cfs.length; t++) {
+        const prevCum = cum;
+        const disc = cfs[t] / Math.pow(1 + rate, t);
+        cum += disc;
+        if (cum >= 0) {
+          if (t === 0) return 0;
+          const needed = -prevCum;
+          const inside = disc === 0 ? 0 : needed / disc; // proportion of discounted inflow in that period
+          return (t - 1) + inside;
+        }
+      }
+      return null;
+    }
+
+    function irr(cfs) {
+      // Robust bisection with auto-bracketing
+      const f = r => npv(cfs, r);
+      let lo = -0.99, hi = 1.0; // start with -99% to 100%
+      let fLo = f(lo), fHi = f(hi);
+      const maxHi = 100; // 10000% cap
+      let tries = 0;
+      if (isNaN(fLo) || isNaN(fHi)) return null;
+      // Expand hi until sign change or cap
+      while (fLo * fHi > 0 && hi < maxHi && tries < 60) { hi *= 2; fHi = f(hi); tries++; }
+      if (fLo * fHi > 0) return null; // no sign change -> IRR not defined or multiple roots
+      // Bisection
+      for (let i = 0; i < 200; i++) {
+        const mid = (lo + hi) / 2;
+        const fMid = f(mid);
+        if (!isFinite(fMid)) return null;
+        if (Math.abs(fMid) < 1e-7) return mid;
+        if (fLo * fMid < 0) { hi = mid; fHi = fMid; } else { lo = mid; fLo = fMid; }
+      }
+      return (lo + hi) / 2; // best effort
+    }
+
+    function renderChart(cfs) {
+      // Simple inline SVG bar chart
+      const width = Math.max(520, Math.min(920, (cfs.length + 2) * 52));
+      const height = 220; const pad = 28;
+      const min = Math.min(...cfs, 0); const max = Math.max(...cfs, 0);
+      const scale = val => {
+        // y = height - pad maps 0; pad maps max; height-pad maps min
+        const range = max - min || 1;
+        return height - pad - ((val - min) / range) * (height - 2 * pad);
+      };
+      const colW = 32; const gap = 18;
+      let x = pad;
+      let bars = '';
+      for (let t = 0; t < cfs.length; t++) {
+        const y0 = scale(0); const y1 = scale(cfs[t]);
+        const y = Math.min(y0, y1);
+        const h = Math.abs(y1 - y0);
+        const fill = cfs[t] >= 0 ? 'url(#gradUp)' : 'url(#gradDn)';
+        bars += `<rect x="${x}" y="${y}" width="${colW}" height="${Math.max(1,h)}" rx="6" fill="${fill}" />`;
+        bars += `<text x="${x + colW/2}" y="${height - 6}" fill="${'#9ca3af'}" font-size="11" text-anchor="middle">${t}</text>`;
+        x += colW + gap;
+      }
+      const svg = `
+        <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}">
+          <defs>
+            <linearGradient id="gradUp" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${'#22d3ee'}" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="${'#4f46e5'}" stop-opacity="0.9" />
+            </linearGradient>
+            <linearGradient id="gradDn" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${'#ef4444'}" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="${'#f59e0b'}" stop-opacity="0.9" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="100%" height="100%" fill="${'#0f1117'}" rx="12" />
+          <g>
+            <line x1="${pad}" y1="${scale(0)}" x2="${width - pad}" y2="${scale(0)}" stroke="${'#1f2937'}" />
+            ${bars}
+          </g>
+        </svg>`;
+      els.chartWrap.innerHTML = svg;
+      els.chartWrap.setAttribute('aria-hidden','false');
+    }
+
+    function formatYears(val) {
+      if (val == null) return '—';
+      if (!isFinite(val)) return '—';
+      const yrs = Math.floor(val);
+      const months = Math.round((val - yrs) * 12);
+      if (months === 0) return `${yrs} yrs`;
+      if (yrs === 0) return `${months} mos`;
+      return `${yrs} yrs ${months} mos`;
+    }
+
+    function calcAll() {
+      const r = parseFloat(els.rate.value)/100;
+      const cfs = getCashFlows();
+      const npvVal = npv(cfs, r);
+      const irrVal = irr(cfs);
+      const pb = payback(cfs);
+      const dpb = discountedPayback(cfs, r);
+
+      els.npvVal.textContent = fmtMoney(npvVal);
+      els.irrVal.textContent = irrVal == null ? '—' : ( (irrVal*100).toFixed(2) + '%' );
+      els.pbVal.textContent = formatYears(pb);
+      els.dpbVal.textContent = formatYears(dpb);
+
+      renderChart(cfs);
+    }
+
+    // Event wiring
+    els.rate.addEventListener('input', () => els.rateLabel.textContent = parseFloat(els.rate.value).toFixed(1) + '%');
+    els.periods.addEventListener('input', () => buildRows(Math.max(1, Math.min(50, parseInt(els.periods.value || '1', 10)))));
+    els.calcBtn.addEventListener('click', calcAll);
+    els.resetBtn.addEventListener('click', () => { els.project.value = ''; els.initial.value = ''; els.rate.value = 10; els.rateLabel.textContent = '10.0%'; els.periods.value = 5; buildRows(5); $$('#cfBody input').forEach(i => i.value = ''); els.npvVal.textContent = els.irrVal.textContent = els.pbVal.textContent = els.dpbVal.textContent = '—'; els.chartWrap.innerHTML=''; });
+    els.exampleBtn.addEventListener('click', () => {
+      els.project.value = 'Solar Retrofit';
+      els.initial.value = -10000;
+      els.periods.value = 5; buildRows(5);
+      els.rate.value = 10; els.rateLabel.textContent = '10.0%';
+      const vals = [3000, 3000, 3000, 3000, 3000];
+      $$('#cfBody input').forEach((inp, idx) => inp.value = vals[idx] ?? 0);
+      calcAll();
+    });
+
+    // Initialize
+    buildRows(parseInt(els.periods.value, 10));
+  </script>
+</body>
+</html>
